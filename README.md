@@ -40,7 +40,7 @@ Admin-Panel-Flask-Web-Application/
 ├── Lib/                     # Python libraries (venv)
 └── Scripts/                 # venv scripts
 ```
-##⚙️ Technologies Used
+## ⚙️ Technologies Used
 ```bash
 Python 3.x
 
@@ -56,7 +56,7 @@ HTML + Bootstrap (in templates)
 
 Werkzeug (for password hashing)
 ```
-##🔧 Setup Instructions
+## 🔧 Setup Instructions
 1. Clone the Repository
 ```
 git clone https://github.com/tadianazeemi04/Admin-Panel-Flask-Web-Application.git
@@ -79,28 +79,28 @@ Run the app once — it will auto-create the user_auth table and an admin user.
 -- You can also run this manually if needed:
 CREATE DATABASE jobsight;
 ```
-##✅ Default Admin Credentials:
+## ✅ Default Admin Credentials:
 ```
 Username: admin
 
 Password: admin123
 ```
-##▶️ Running the App
+## ▶️ Running the App
 ```
 python app.py
 ```
 Then open your browser and go to:
 http://127.0.0.1:5000
 
-##📥 CSV Upload Format
+## 📥 CSV Upload Format
 Make sure your CSV has the following columns in order:
 ```
 job_title, company_name, job_type, company_website, social_media_link, 
 skills_required, education_required, job_posting_link, min_salary, max_salary
 ```
-##📜 License
+## 📜 License
 This project is open-source and available under the MIT License.
 
-##👨‍💻 Author
+## 👨‍💻 Author
 Tadian Ahmad Azeemi
 
