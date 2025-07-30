@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .report-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-field {
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .export-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .export-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%, -50%);
+            transform-origin: 50% 50%;
+        }
+
+        .export-btn:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+
+        .section-title {
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    {% block content %}
+    <div class="container mx-auto px-4 py-8 max-w-4xl animate-fade-in">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 section-title">
+                <i class="fas fa-file-export text-blue-500 mr-3"></i>Export Job Data Report
+            </h2>
+            <p class="text-gray-600 mt-4">
+                Generate comprehensive reports of job postings within your specified date range.
+                Export the data in CSV format for further analysis or record-keeping.
+            </p>
+        </div>
+
+        <!-- Report Form Card -->
+        <div class="report-card p-8">
+            <form method="POST" action="{{ url_for('export_report') }}">
+                <!-- Date Range Selection -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                        <i class="fas fa-calendar-alt text-blue-500 mr-2"></i> Select Date Range
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-2">
+                                Start Date <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="date" name="start_date" required
+                                    class="input-field w-full px-4 py-3 rounded-lg focus:outline-none">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i class="fas fa-calendar text-gray-400"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Earliest date to include in the report</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-medium mb-2">
+                                End Date <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="date" name="end_date" required
+                                    class="input-field w-full px-4 py-3 rounded-lg focus:outline-none">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i class="fas fa-calendar text-gray-400"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Latest date to include in the report</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Options -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                        <i class="fas fa-cog text-blue-500 mr-2"></i> Report Options
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <label for="include-all" class="ml-2 block text-sm text-gray-700">
+                                Include all job fields in the export
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="format-csv" class="ml-2 block text-sm text-gray-700">
+                                CSV Format (Compatible with Excel)
+                            </label>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                    <div class="text-sm text-gray-500">
+                        <i class="fas fa-info-circle text-blue-500 mr-1"></i>
+                        Reports may take a few moments to generate
+                    </div>
+                    <button type="submit"
+                        class="export-btn bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center">
+                        <i class="fas fa-file-export mr-2"></i> Export Report
+                    </button>
+                </div>
+            </form>
+            <div class="flex justify-center items-center pt-10">
+
+                <a href="/admin_panel"
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition flex items-center space-x-2 h-fit">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Back To Dashboard</span>
+                </a>
+            </div>
+        </div>
+
+
+    </div>
+    {% endblock %}
+
+</body>
+
+</html>

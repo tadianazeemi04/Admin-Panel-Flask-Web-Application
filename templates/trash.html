@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trash Bin - Deleted Jobs</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom styles */
+        .trash-icon {
+            color: #ef4444;
+        }
+        
+        .table-row-hover:hover {
+            background-color: #f8fafc;
+        }
+        
+        .salary-badge {
+            background-color: #ecfdf5;
+            color: #065f46;
+        }
+        
+        .job-type-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .full-time {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .part-time {
+            background-color: #ede9fe;
+            color: #5b21b6;
+        }
+        
+        .internship {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .remote {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        /* Button transitions */
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* Pagination active state */
+        .page-item.active .page-link {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        /* Link styling */
+        .link {
+            color: #3b82f6;
+            transition: all 0.2s;
+        }
+        
+        .link:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header with Admin Panel Button -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex items-center space-x-3 animate-fade">
+                <i class="fas fa-trash-alt text-3xl trash-icon"></i>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Trash Bin - Deleted Jobs</h1>
+            </div>
+            <a href="admin_panel" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition flex items-center space-x-2">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Back To Dashboard</span>
+            </a>
+        </div>
+        
+        <!-- Search and Bulk Actions -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 animate-fade" style="animation-delay: 0.1s;">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <!-- Search Bar -->
+                <div class="relative flex-grow max-w-md">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="searchInput" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Search deleted jobs...">
+                </div>
+                
+                <!-- Bulk Actions -->
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <form action="{{ url_for('recover_all_jobs') }}" method="post" class="w-full sm:w-auto">
+                        <button type="submit" class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-sm transition flex items-center justify-center space-x-2">
+                            <i class="fas fa-undo"></i>
+                            <span>Recover All</span>
+                        </button>
+                    </form>
+                    <form action="{{ url_for('delete_all_forever') }}" method="post" onsubmit="return confirm('Are you sure you want to permanently delete all records?');" class="w-full sm:w-auto">
+                        <button type="submit" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-sm transition flex items-center justify-center space-x-2">
+                            <i class="fas fa-trash"></i>
+                            <span>Delete All Permanently</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Table Section -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden animate-fade" style="animation-delay: 0.2s;">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200" id="trashTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(0)">
+                                <div class="flex items-center">
+                                    Job Title
+                                    <i class="fas fa-sort ml-1 text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(1)">
+                                <div class="flex items-center">
+                                    Company
+                                    <i class="fas fa-sort ml-1 text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(2)">
+                                <div class="flex items-center">
+                                    Type
+                                    <i class="fas fa-sort ml-1 text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Links
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(5)">
+                                <div class="flex items-center">
+                                    Skills
+                                    <i class="fas fa-sort ml-1 text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(6)">
+                                <div class="flex items-center">
+                                    Education
+                                    <i class="fas fa-sort ml-1 text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(8)">
+                                <div class="flex items-center">
+                                    Salary
+                                    <i class="fas fa-sort ml-1 text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortTable(9)">
+                                <div class="flex items-center">
+                                    Deleted At
+                                    <i class="fas fa-sort ml-1 text-gray-400"></i>
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="trashBody">
+                        {% for job in trashed_jobs %}
+                        <tr class="table-row-hover transition">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ job.job_title }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ job.company_name }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span class="job-type-badge {{ job.job_type.lower().replace(' ', '-') }}">
+                                    {{ job.job_type }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex space-x-2">
+                                    {% if job.company_website %}
+                                        {% set website_link = job.company_website %}
+                                        {% if not website_link.startswith('http://') and not website_link.startswith('https://') %}
+                                            {% set website_link = 'https://' + website_link %}
+                                        {% endif %}
+                                        <a href="{{ website_link }}" target="_blank" class="link" title="Company Website">
+                                            <i class="fas fa-globe"></i>
+                                        </a>
+                                    {% endif %}
+
+                                    {% if job.social_media_link %}
+                                        {% set social_link = job.social_media_link %}
+                                        {% if not social_link.startswith('http://') and not social_link.startswith('https://') %}
+                                            {% set social_link = 'https://' + social_link %}
+                                        {% endif %}
+                                        <a href="{{ social_link }}" target="_blank" class="link" title="Social Media">
+                                            <i class="fas fa-share-alt"></i>
+                                        </a>
+                                    {% endif %}
+
+                                    {% if job.job_posting_link %}
+                                        {% set job_link = job.job_posting_link %}
+                                        {% if not job_link.startswith('http://') and not job_link.startswith('https://') %}
+                                            {% set job_link = 'https://' + job_link %}
+                                        {% endif %}
+                                        <a href="{{ job_link }}" target="_blank" class="link" title="Job Posting">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ job.skills_required }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                {{ job.education_required }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium salary-badge">
+                                    {{ job.min_salary }} - {{ job.max_salary }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ job.timestamp }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div class="flex space-x-2">
+                                    <form action="{{ url_for('recover_job', job_id=job.id) }}" method="post" class="inline">
+                                        <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition flex items-center space-x-1">
+                                            <i class="fas fa-undo text-xs"></i>
+                                            <span>Recover</span>
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('delete_forever', job_id=job.id) }}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to permanently delete this job?');">
+                                        <button type="submit" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition flex items-center space-x-1">
+                                            <i class="fas fa-trash text-xs"></i>
+                                            <span>Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200">
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Showing <span class="font-medium" id="pagination-start">1</span> to <span class="font-medium" id="pagination-end">10</span> of <span class="font-medium" id="pagination-total">{{ trashed_jobs|length }}</span> results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <ul class="pagination flex items-center space-x-1" id="pagination"></ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Search filter
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#trashBody tr');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const isVisible = text.includes(filter);
+                row.style.display = isVisible ? '' : 'none';
+                if (isVisible) visibleCount++;
+            });
+            
+            document.getElementById('pagination-total').textContent = visibleCount;
+            paginateTable();
+        });
+
+        // Sorting table
+        function sortTable(n) {
+            const table = document.getElementById("trashTable");
+            let switching = true;
+            let dir = "asc";
+            let switchcount = 0;
+            
+            // Remove all sort icons
+            document.querySelectorAll('th i.fa-sort-up, th i.fa-sort-down').forEach(icon => {
+                icon.classList.remove('fa-sort-up', 'fa-sort-down');
+                icon.classList.add('fa-sort');
+            });
+            
+            // Add sort direction icon to current column
+            const currentTh = table.rows[0].cells[n];
+            const sortIcon = currentTh.querySelector('i');
+            sortIcon.classList.remove('fa-sort');
+            
+            while (switching) {
+                switching = false;
+                const rows = table.rows;
+                
+                for (let i = 1; i < (rows.length - 1); i++) {
+                    let shouldSwitch = false;
+                    const x = rows[i].getElementsByTagName("td")[n];
+                    const y = rows[i + 1].getElementsByTagName("td")[n];
+                    
+                    // Check if the two rows should switch place
+                    const xValue = x.textContent || x.innerText;
+                    const yValue = y.textContent || y.innerText;
+                    
+                    if (dir === "asc") {
+                        sortIcon.classList.add('fa-sort-up');
+                        sortIcon.classList.remove('fa-sort-down');
+                        if (xValue.toLowerCase() > yValue.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir === "desc") {
+                        sortIcon.classList.add('fa-sort-down');
+                        sortIcon.classList.remove('fa-sort-up');
+                        if (xValue.toLowerCase() < yValue.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount === 0 && dir === "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+            
+            paginateTable();
+        }
+
+        // Pagination
+        const rowsPerPage = 10;
+        let currentPage = 1;
+
+        function paginateTable() {
+            const table = document.getElementById("trashTable");
+            const tbody = table.getElementsByTagName("tbody")[0];
+            const rows = Array.from(tbody.getElementsByTagName("tr")).filter(r => r.style.display !== 'none');
+            const pagination = document.getElementById("pagination");
+            const pageCount = Math.ceil(rows.length / rowsPerPage);
+            
+            // Update pagination info
+            document.getElementById('pagination-total').textContent = rows.length;
+            
+            function showPage(page) {
+                currentPage = page;
+                const start = (page - 1) * rowsPerPage;
+                const end = Math.min(start + rowsPerPage, rows.length);
+                
+                // Hide all rows first
+                rows.forEach(row => {
+                    row.style.display = 'none';
+                });
+                
+                // Show rows for current page
+                for (let i = start; i < end; i++) {
+                    if (rows[i]) {
+                        rows[i].style.display = '';
+                    }
+                }
+                
+                // Update pagination info
+                document.getElementById('pagination-start').textContent = start + 1;
+                document.getElementById('pagination-end').textContent = end;
+                
+                renderPaginationButtons();
+            }
+
+            function renderPaginationButtons() {
+                pagination.innerHTML = '';
+                
+                // Previous button
+                const prevLi = document.createElement("li");
+                prevLi.classList.add("page-item");
+                if (currentPage === 1) prevLi.classList.add("disabled");
+                prevLi.innerHTML = `<a class="page-link px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>`;
+                prevLi.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) showPage(currentPage - 1);
+                });
+                pagination.appendChild(prevLi);
+                
+                // Page buttons
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(pageCount, startPage + maxVisiblePages - 1);
+                
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                if (startPage > 1) {
+                    const firstLi = document.createElement("li");
+                    firstLi.classList.add("page-item");
+                    firstLi.innerHTML = `<a class="page-link px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50" href="#">1</a>`;
+                    firstLi.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showPage(1);
+                    });
+                    pagination.appendChild(firstLi);
+                    
+                    if (startPage > 2) {
+                        const ellipsisLi = document.createElement("li");
+                        ellipsisLi.classList.add("page-item", "disabled");
+                        ellipsisLi.innerHTML = `<span class="page-link px-3 py-1">...</span>`;
+                        pagination.appendChild(ellipsisLi);
+                    }
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const li = document.createElement("li");
+                    li.classList.add("page-item");
+                    if (i === currentPage) li.classList.add("active");
+                    li.innerHTML = `<a class="page-link px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50" href="#">${i}</a>`;
+                    li.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showPage(i);
+                    });
+                    pagination.appendChild(li);
+                }
+                
+                if (endPage < pageCount) {
+                    if (endPage < pageCount - 1) {
+                        const ellipsisLi = document.createElement("li");
+                        ellipsisLi.classList.add("page-item", "disabled");
+                        ellipsisLi.innerHTML = `<span class="page-link px-3 py-1">...</span>`;
+                        pagination.appendChild(ellipsisLi);
+                    }
+                    
+                    const lastLi = document.createElement("li");
+                    lastLi.classList.add("page-item");
+                    lastLi.innerHTML = `<a class="page-link px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50" href="#">${pageCount}</a>`;
+                    lastLi.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showPage(pageCount);
+                    });
+                    pagination.appendChild(lastLi);
+                }
+                
+                // Next button
+                const nextLi = document.createElement("li");
+                nextLi.classList.add("page-item");
+                if (currentPage === pageCount) nextLi.classList.add("disabled");
+                nextLi.innerHTML = `<a class="page-link px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>`;
+                nextLi.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    if (currentPage < pageCount) showPage(currentPage + 1);
+                });
+                pagination.appendChild(nextLi);
+            }
+            
+            showPage(1);
+        }
+
+        // Initialize pagination on load
+        document.addEventListener("DOMContentLoaded", function() {
+            paginateTable();
+            
+            // Add confirmation to delete buttons
+            document.querySelectorAll('form[onsubmit]').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (!confirm(this.getAttribute('onsubmit').replace('return ', ''))) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

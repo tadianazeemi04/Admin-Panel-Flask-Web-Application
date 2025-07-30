@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .sidebar {
+            transition: all 0.3s;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .nav-text {
+            display: none;
+        }
+
+        .sidebar.collapsed .logo-text {
+            display: none;
+        }
+
+        .sidebar.collapsed .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
+        }
+
+        #saved-data {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <div class="sidebar bg-blue-800 text-white w-64 flex flex-col">
+            <div class="p-4 flex items-center justify-between border-b border-blue-700">
+                <div class="flex items-center">
+                    <i class="fas fa-chart-line text-2xl mr-3"></i>
+                    <span class="logo-text text-xl font-bold">JobSight Analyzer</span>
+                </div>
+                <button id="toggleSidebar" class="expand-icon text-white focus:outline-none">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+            <nav class="flex-1 overflow-y-auto">
+                <div class="p-4">
+                    <div class="mb-8">
+                        <div class="text-blue-300 uppercase text-xs font-semibold mb-2 nav-text">Main</div>
+                        <a href="#upload"
+                            class="flex items-center py-2 px-3 rounded-lg hover:bg-blue-700 active:bg-blue-700 text-white mb-2">
+                            <i class="fas fa-upload mr-3"></i>
+                            <span class="nav-text">Upload Panel</span>
+                        </a>
+                        <a href="{{ url_for('admin_analytics') }}"
+                            class="flex items-center py-2 px-3 rounded-lg hover:bg-blue-700 text-white mb-2">
+                            <i class="fas fa-chart-pie mr-3"></i>
+                            <span class="nav-text">Analyzer</span>
+                        </a>
+                        <a href="{{ url_for('admin_report') }}"
+                            class="flex items-center py-2 px-3 rounded-lg hover:bg-blue-700 text-white mb-2">
+                            <i class="fas fa-file-download mr-3 px-1"></i>
+                            <span class="nav-text">Reports</span>
+                        </a>
+                        <a href="#saved-data"
+                            class="flex items-center py-2 px-3 rounded-lg hover:bg-blue-700 text-white mb-2">
+                            <i class="fas fa-save mr-3 px-1"></i>
+                            <span class="nav-text">Saved Data</span>
+                        </a>
+                        <a href="search"
+                            class="flex items-center py-2 px-3 rounded-lg hover:bg-blue-700 text-white mb-2">
+                            <i class="fas fa-search mr-3 px-1"></i>
+                            <span class="nav-text">Search Data</span>
+                        </a>
+                        <a href="trash"
+                            class="flex items-center py-2 px-3 rounded-lg hover:bg-blue-700 text-white mb-2">
+                            <i class="fas fa-trash-alt mr-3 px-1"></i>
+                            <span class="nav-text">Trash Data</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+            <div class="p-4 border-t border-blue-700">
+                <div class="flex items-center">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_l9OkSdGDYHUOpmacr-5M6vhCgs4MVMhO2w&s"
+                        alt="User" class="w-8 h-8 rounded-full mr-3">
+                    <div class="nav-text">
+                        <div class="text-sm font-medium">{{ username }}</div>
+                        <div class="text-xs text-blue-300">Admin</div>
+                    </div>
+                </div>
+            </div>
+            <script>
+                // Initialize sidebar toggle
+                document.getElementById('toggleSidebar').addEventListener('click', function () {
+                    document.querySelector('.sidebar').classList.toggle('collapsed');
+                });
+            </script>
+        </div>
+
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between p-4">
+                    <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+                    <a href="{{ url_for('logout') }}">
+                        <button
+                            class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Logout
+                        </button>
+                    </a>
+                </div>
+            </header>
+
+            <!-- Main Sections -->
+            <main class="p-6">
+                <!-- Flash messages display -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                    <div
+                        class="alert alert-{{ category }} p-4 mb-4 rounded-lg border-l-4 border-{{ category }}-500 bg-{{ category }}-100">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                <div class="container mx-auto mt-8 px-4">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Post a Job Opportunity</h2>
+
+                    </div>
+
+                    <form action="{{ url_for('add_jobs') }}" method="POST" class="space-y-6">
+                        <input type="hidden" name="action" value="edit">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Left Column -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">Job
+                                        Title</label>
+                                    <input type="text" name="job_title" placeholder="e.g. Senior Frontend Developer"
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400">
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">Company
+                                        Name</label>
+                                    <input type="text" name="company_name" placeholder="e.g. Tech Innovations Inc."
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Job Type</label>
+                                    <select name="job_type"
+                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700">
+                                        <option value="" disabled selected>Select job type</option>
+                                        <option>Full-time</option>
+                                        <option>Part-time</option>
+                                        <option>Contract</option>
+                                        <option>Internship</option>
+                                        <option>Remote</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Right Column -->
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Company Website</label>
+                                    <div class="relative">
+                                        <div
+                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                            https://
+                                        </div>
+                                        <input type="text" name="company_website" placeholder="yourcompany.com"
+                                            class="w-full pl-16 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Social Media</label>
+                                    <div class="relative">
+                                        <div
+                                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                            https://
+                                        </div>
+                                        <input type="text" name="social_media_link" placeholder="company/your-profile"
+                                            class="w-full pl-24 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Min Salary
+                                            (PKR)</label>
+                                        <input type="number" name="min_salary" placeholder="10,000"
+                                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400"
+                                            required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Max Salary
+                                            (PKR)</label>
+                                        <input type="number" name="max_salary" placeholder="90,000"
+                                            class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Full Width Fields -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Skills Required</label>
+                            <input type="text" name="skills_required" placeholder="React, JavaScript, CSS, etc."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400"
+                                required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Education Required</label>
+                            <input type="text" name="education_required"
+                                placeholder="Bachelor's degree in Computer Science or equivalent"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-1 after:content-['*'] after:ml-0.5 after:text-red-500">Job
+                                Posting Link</label>
+                            <input type="url" name="job_posting_link" placeholder="https://company.com/careers/job-id"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-700 placeholder-gray-400">
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
+
+                            <button type="submit"
+                                class="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm">
+                                Post Job Opportunity
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="container mx-auto mt-8 px-4">
+                    CSV Upload & Data Table Manager
+                    <section id="upload" class="mb-12 slide-up">
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
+                            <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                                <i class="fas fa-file-csv text-blue-500 mr-3"></i>
+                                CSV Upload & Data Management
+                            </h2>
+
+                            <!-- File Upload Card -->
+                            <div class="mb-8">
+                                <div id="upload-card"
+                                    class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition-colors duration-300 bg-gray-50">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3"></i>
+                                        <h3 class="text-lg font-medium text-gray-700 mb-1">Upload Job Data CSV</h3>
+                                        <form action="/upload" method="POST" enctype="multipart/form-data"
+                                            class="flex flex-col items-center justify-center">
+                                            <input type="file" name="file" accept=".csv"
+                                                class="block w-full mb-4 border border-gray-300 p-2 rounded" required>
+                                            <button type="submit"
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors duration-300 flex items-center">
+                                                <i class="fas fa-file-import mr-2"></i>
+                                                Upload
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </section>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                            // File upload handling
+                            const uploadCard = document.getElementById('upload-card');
+                            const fileInput = document.getElementById('csv-upload');
+                            const uploadBtn = document.getElementById('upload-btn');
+                            const uploadForm = document.getElementById('upload-form');
+
+                            uploadBtn.addEventListener('click', () => fileInput.click());
+
+                            fileInput.addEventListener('change', () => {
+                                if (fileInput.files.length > 0) {
+                                    const formData = new FormData();
+                                    formData.append('file', fileInput.files[0]);
+
+                                    fetch('/upload', {
+                                        method: 'POST',
+                                        body: formData
+                                    })
+                                        .then(response => {
+                                            if (response.ok) {
+                                                return response.text();
+                                            }
+                                            throw new Error('Upload failed');
+                                        })
+                                        .then(() => {
+                                            alert('File uploaded successfully!');
+                                            loadJobData();
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                            alert('Error uploading file');
+                                        });
+                                }
+                            });
+
+                            // Drag and drop functionality
+                            uploadCard.addEventListener('dragover', (e) => {
+                                e.preventDefault();
+                                uploadCard.classList.add('border-blue-400');
+                            });
+
+                            uploadCard.addEventListener('dragleave', () => {
+                                uploadCard.classList.remove('border-blue-400');
+                            });
+
+                            uploadCard.addEventListener('drop', (e) => {
+                                e.preventDefault();
+                                uploadCard.classList.remove('border-blue-400');
+
+                                if (e.dataTransfer.files.length) {
+                                    fileInput.files = e.dataTransfer.files;
+                                    const event = new Event('change');
+                                    fileInput.dispatchEvent(event);
+                                }
+                            });
+
+                        });
+                    </script>
+
+
+                    <!-- Stats Cards -->
+                    <div id="analyzer" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded shadow text-center">
+                            <div class="text-4xl text-blue-600"><i class="fas fa-briefcase"></i></div>
+                            <h3 class="text-xl font-bold mt-2">0</h3>
+                            <p>Total Jobs</p>
+                        </div>
+                        <!-- <div class="bg-white p-6 rounded shadow text-center">
+                            <div class="text-4xl text-green-600"><i class="fas fa-coins"></i></div>
+                            <h3 class="text-xl font-bold mt-2">0</h3>
+                            <p>Average Salary</p>
+                        </div> -->
+                        <div class="bg-white p-6 rounded shadow text-center">
+                            <div class="text-4xl text-purple-600"><i class="fas fa-building"></i></div>
+                            <h3 class="text-xl font-bold mt-2">0</h3>
+                            <p>Companies</p>
+                        </div>
+                    </div>
+
+                    <!-- Job Table -->
+                    <div class="overflow-x-auto bg-white p-4 rounded shadow" id="saved-data">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6">Saved Data</h3>
+                        <table class="min-w-full table-auto text-sm">
+                            <thead class="bg-gray-200">
+                                <tr>
+                                    <th class="px-4 py-2">Job Title</th>
+                                    <th class="px-4 py-2">Min Salary</th>
+                                    <th class="px-4 py-2">Max Salary</th>
+                                    <th class="px-4 py-2">Company</th>
+                                    <th class="px-4 py-2">Job Type</th>
+                                    <th class="px-4 py-2">Website</th>
+                                    <th class="px-4 py-2">Social Media</th>
+                                    <th class="px-4 py-2">Skills</th>
+                                    <th class="px-4 py-2">Education</th>
+                                    <th class="px-4 py-2">Posted</th>
+                                    <th class="px-4 py-2">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="old-data-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+
+        </div>
+
+
+        <script>
+            function makeURL(url) {
+                if (!url) return '#';
+                return url.startsWith('http') ? url : 'https://' + url;
+            }
+
+            function initializeTable() {
+                fetch('/api/jobs')
+                    .then(res => res.json())
+                    .then(data => {
+                        const tbody = document.getElementById('old-data-table-body');
+                        tbody.innerHTML = '';
+                        data.forEach(row => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                        <td class="border px-4 py-2">${row.job_title}</td>
+                        <td class="border px-4 py-2">${row.min_salary}</td>
+                        <td class="border px-4 py-2">${row.max_salary}</td>
+                        <td class="border px-4 py-2">${row.company_name}</td>
+                        <td class="border px-4 py-2">${row.job_type}</td>
+                        <td class="border px-4 py-2"><a class="text-blue-600" href="${makeURL(row.company_website)}" target="_blank">Visit</a></td>
+                        <td class="border px-4 py-2"><a class="text-blue-600" href="${makeURL(row.social_media_link)}" target="_blank">Visit</a></td>
+                        <td class="border px-4 py-2">${row.skills_required}</td>
+                        <td class="border px-4 py-2">${row.education_required}</td>
+                        <td class="border px-4 py-2">
+                            <a class="text-blue-600" href="${makeURL(row.job_posting_link)}" target="_blank">Visit</a>
+
+                        </td>
+
+                        <td class="border px-4 py-2">${row.timestamp}</td>
+                        
+                    `;
+                            tbody.appendChild(tr);
+                        });
+                    });
+            }
+
+
+            function initializeStats() {
+                fetch('/api/analytics')
+                    .then(res => res.json())
+                    .then(stats => {
+                        document.querySelector("#analyzer .text-blue-600 ~ h3").textContent = stats.total_jobs;
+                        //document.querySelector("#analyzer .text-green-600 ~ h3").textContent = "PKR " + stats.avg_salary.toLocaleString();
+                        document.querySelector("#analyzer .text-purple-600 ~ h3").textContent = stats.companies;
+                    });
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                initializeTable();
+                initializeStats();
+            });
+
+        </script>
+    </div>
+</body>
+
+</html>

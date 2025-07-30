@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
+
+        .section-title {
+            position: relative;
+            padding-bottom: 8px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        .delay-100 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-200 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-300 {
+            animation-delay: 0.3s;
+        }
+    </style>
+</head>
+
+<body class="p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+
+        <div class="flex justify-between items-center mb-6">
+            <div class="mb-10 animate-fade-in">
+                <h1 class="text-3xl font-bold text-gray-800">JobSight Analytics Dashboard</h1>
+                <p class="text-gray-500 mt-2">Comprehensive insights into job market trends</p>
+            </div>
+            <a href="{{ url_for('admin_panel') }}"
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition flex items-center space-x-2">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Back To Dashboard</span>
+            </a>
+        </div>
+
+        <!-- Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Job Type Chart -->
+            <div class="dashboard-card p-6 animate-fade-in delay-100">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 section-title">Job Type Distribution</h2>
+                        <p class="text-gray-500 text-sm mt-2">Breakdown of different employment types</p>
+                    </div>
+                    <div class="flex items-center text-indigo-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <span class="text-xs">Updated today</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="jobTypeChart"></canvas>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-3 justify-center">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                        <span class="text-xs text-gray-600">Full-time</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                        <span class="text-xs text-gray-600">Contract</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <span class="text-xs text-gray-600">Part-time</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                        <span class="text-xs text-gray-600">Internship</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skill-Based Chart -->
+            <div class="dashboard-card p-6 animate-fade-in delay-200">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 section-title">Top Skills Required</h2>
+                        <p class="text-gray-500 text-sm mt-2">Most in-demand skills this month</p>
+                    </div>
+                    <div class="flex items-center text-indigo-500">
+                        <i class="fas fa-filter mr-1"></i>
+                        <span class="text-xs">Top 10</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="skillChart"></canvas>
+                </div>
+                
+            </div>
+
+            <!-- Education Analysis -->
+            <div class="dashboard-card p-6 animate-fade-in delay-100">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 section-title">Education Requirements</h2>
+                        <p class="text-gray-500 text-sm mt-2">Educational qualifications for listed jobs</p>
+                    </div>
+                    <div class="flex items-center text-indigo-500">
+                        <i class="fas fa-graduation-cap mr-1"></i>
+                        <span class="text-xs">Analysis</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="educationChart"></canvas>
+                </div>
+                
+            </div>
+
+            <!-- Salary Analysis -->
+            <div class="dashboard-card p-6 animate-fade-in delay-200">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800 section-title">Salary Distribution</h2>
+                        <p class="text-gray-500 text-sm mt-2">Salary ranges across different positions</p>
+                    </div>
+                    <div class="flex items-center text-indigo-500">
+                        <i class="fas fa-dollar-sign mr-1"></i>
+                        <span class="text-xs">Annual</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salaryChart"></canvas>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Job Type Chart
+        const jobTypeCtx = document.getElementById('jobTypeChart').getContext('2d');
+        const jobTypeChart = new Chart(jobTypeCtx, {
+            type: 'pie',
+            data: {
+                labels: {{ job_type_data | map(attribute = 'job_type') | list | tojson }},
+        datasets: [{
+            data: {{ job_type_data | map(attribute = 'count') | list | tojson }},
+            backgroundColor: ['#3B82F6', '#8B5CF6', '#22C55E', '#FACC15', '#EF4444'],
+            borderWidth: 0,
+            borderRadius: 4
+                }]
+            },
+        options: {
+            responsive: true,
+                maintainAspectRatio: false,
+                    plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#1F2937',
+                        titleFont: {
+                        size: 14,
+                            weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 12
+                    },
+                    padding: 12,
+                        cornerRadius: 8,
+                            displayColors: true,
+                                callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            cutout: '65%'
+        }
+        });
+
+        // Skill Chart
+        const skillData = {{ skill_counts | tojson }};
+        const sortedSkills = Object.entries(skillData)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        const skillLabels = sortedSkills.map(item => item[0]);
+        const skillValues = sortedSkills.map(item => item[1]);
+
+        const skillCtx = document.getElementById('skillChart').getContext('2d');
+        const skillChart = new Chart(skillCtx, {
+            type: 'bar',
+            data: {
+                labels: skillLabels,
+                datasets: [{
+                    label: 'Frequency',
+                    data: skillValues,
+                    backgroundColor: '#6366F1',
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1F2937',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#6B7280'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#E5E7EB',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6B7280',
+                            callback: function (value) {
+                                if (value % 1 === 0) {
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Education Chart
+        const educationCtx = document.getElementById('educationChart').getContext('2d');
+        const educationChart = new Chart(educationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ education_data | map(attribute = 'education_required') | list | tojson }},
+        datasets: [{
+            data: {{ education_data | map(attribute = 'count') | list | tojson }},
+            backgroundColor: ['#06b6d4', '#a855f7', '#f97316', '#10b981', '#ef4444'],
+            borderWidth: 0,
+            borderRadius: 4
+                }]
+            },
+        options: {
+            responsive: true,
+                maintainAspectRatio: false,
+                    plugins: {
+                legend: {
+                    position: 'right',
+                        labels: {
+                        boxWidth: 12,
+                            padding: 16,
+                                font: {
+                            size: 11
+                        },
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#1F2937',
+                        titleFont: {
+                        size: 14,
+                            weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 12
+                    },
+                    padding: 12,
+                        cornerRadius: 8,
+                            displayColors: true
+                }
+            },
+            cutout: '65%'
+        }
+        });
+
+        // Salary Chart
+        const salaryData = {{ salary_buckets | tojson }};
+        const salaryLabels = Object.keys(salaryData);
+        const salaryCounts = Object.values(salaryData);
+
+        const salaryCtx = document.getElementById('salaryChart').getContext('2d');
+        const salaryChart = new Chart(salaryCtx, {
+            type: 'bar',
+            data: {
+                labels: salaryLabels,
+                datasets: [{
+                    label: 'Number of Jobs',
+                    data: salaryCounts,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: '#1F2937',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 12
+                        },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function (context) {
+                                return `${context.raw} jobs in this range`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#6B7280'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#E5E7EB',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6B7280',
+                            callback: function (value) {
+                                if (value % 1 === 0) {
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
